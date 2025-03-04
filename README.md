@@ -4,8 +4,6 @@
 
 This prototype builds upon the original DummyDronie repository, evolving it into a platform for Drones as Natural Language AI Agents.
 
-![Banner](https://user-images.githubusercontent.com/8620461/232165557-58ec5449-8365-4fd8-8fa3-70a79e2ec2a1.png)
-
 ## Vision
 
 ### Natural Language Tasking
