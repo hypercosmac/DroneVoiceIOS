@@ -46,6 +46,11 @@ struct VoiceCommandButtonView: View {
                     voiceCommandController.stopListening()
                 }
         )
+        // Add double tap gesture for testing
+        .onTapGesture(count: 2) {
+            log.info("Double tap detected - testing confirmation dialog")
+            voiceCommandController.testConfirmationDialog()
+        }
         .overlay(
             // Recognized text display
             Text(voiceCommandController.recognizedText)
@@ -152,14 +157,22 @@ class VoiceCommandController: NSObject, ObservableObject {
             if let result = result {
                 // Update recognized text
                 self.recognizedText = result.bestTranscription.formattedString
+                log.info("Recognized text: \(self.recognizedText)")
                 isFinal = result.isFinal
                 
-                // Check for "take off" command
-                if result.bestTranscription.formattedString.lowercased().contains("take off") {
-                    log.info("Take off command detected")
+                // Check for "take off" command - make detection more flexible with trimming and case insensitivity
+                let normalizedText = result.bestTranscription.formattedString.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+                if normalizedText.contains("take off") || 
+                   normalizedText.contains("takeoff") || 
+                   normalizedText.contains("take-off") {
+                    log.info("Take off command detected: '\(normalizedText)'")
                     self.commandToConfirm = "takeoff"
-                    self.showConfirmation = true
-                    self.stopListening()
+                    
+                    // Ensure UI updates happen on main thread
+                    DispatchQueue.main.async {
+                        self.showConfirmation = true
+                        self.stopListening()
+                    }
                 }
             }
             
@@ -168,9 +181,17 @@ class VoiceCommandController: NSObject, ObservableObject {
                 self.audioEngine.stop()
                 inputNode.removeTap(onBus: 0)
                 
+                if let error = error {
+                    log.error("Speech recognition error: \(error.localizedDescription)")
+                }
+                
                 self.recognitionRequest = nil
                 self.recognitionTask = nil
-                self.isListening = false
+                
+                // Update UI on main thread
+                DispatchQueue.main.async {
+                    self.isListening = false
+                }
             }
         }
         
@@ -208,6 +229,7 @@ class VoiceCommandController: NSObject, ObservableObject {
     
     // Execute confirmed command
     func executeCommand() {
+        log.info("Command execution confirmed: \(commandToConfirm)")
         switch commandToConfirm {
         case "takeoff":
             log.info("Executing take off command")
@@ -237,10 +259,18 @@ class VoiceCommandController: NSObject, ObservableObject {
         })
     }
     
-    // Cancel command
+    // Cancel command with logging
     func cancelCommand() {
+        log.info("Command cancelled: \(commandToConfirm)")
         commandToConfirm = ""
         showConfirmation = false
+    }
+    
+    // Add diagnostic method to manually test the confirmation dialog
+    func testConfirmationDialog() {
+        log.info("Testing confirmation dialog")
+        commandToConfirm = "takeoff"
+        showConfirmation = true
     }
 }
 

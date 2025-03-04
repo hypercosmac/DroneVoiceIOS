@@ -4,11 +4,11 @@
 <dict>
 	<key>DJISDKAppKey</key>
 	<!-- <string>5441161517e2fb4cfeeb4be8</string> -->
-	<string>bfb6d0ec459f6400e2d65acd</string>
+	<string>af2252c08c29482fd1c59ca7</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>DJISDKAppKey</key>
-		<string>bfb6d0ec459f6400e2d65acd</string>
+		<string>af2252c08c29482fd1c59ca7</string>
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
@@ -23,8 +23,8 @@
 	<string>com.autonomousdroneingelligence.dji</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app uses the microphone to listen for voice commands to control the drone.</string>
