@@ -187,4 +187,57 @@ class FlightController: NSObject, ObservableObject, DJIBatteryDelegate, DJIFligh
         batteryPercentage = Int(state.chargeRemainingInPercent)
     }
     
+    /// Sends virtual stick commands based on joystick inputs
+    func sendVirtualStickCommands(throttle: Float, yaw: Float, pitch: Float, roll: Float) {
+        guard let aircraft = DJISDKManager.product() as? DJIAircraft else {
+            log.error("Aircraft is not found")
+            return
+        }
+        
+        // Enable virtual sticks if not already enabled
+        if aircraft.flightController?.isVirtualStickAdvancedModeEnabled == false {
+            self.enableVirtualSticksForJoystick()
+            return
+        }
+        
+        // Create control data with joystick inputs
+        let controlData = DJIVirtualStickFlightControlData(
+            pitch: pitch,
+            roll: roll,
+            yaw: yaw,
+            verticalThrottle: throttle
+        )
+        
+        // Send the control command
+        aircraft.flightController?.send(controlData, withCompletion: { (error) in
+            if let error = error {
+                log.error("Failed to send virtual sticks command: \(error.localizedDescription)")
+                return
+            }
+            log.verbose("Joystick virtual sticks command sent")
+        })
+    }
+    
+    /// Enables virtual sticks mode specifically for joystick control
+    private func enableVirtualSticksForJoystick() {
+        guard let aircraft = DJISDKManager.product() as? DJIAircraft else {
+            log.error("Aircraft is not found for joystick control")
+            return
+        }
+        
+        aircraft.flightController?.setVirtualStickModeEnabled(true, withCompletion: { (error) in
+            if let error = error {
+                log.error("Failed to enable virtual sticks for joystick: \(error.localizedDescription)")
+                return
+            }
+            
+            log.info("Virtual sticks enabled for joystick")
+            aircraft.flightController?.rollPitchCoordinateSystem = .body
+            aircraft.flightController?.rollPitchControlMode = .velocity
+            aircraft.flightController?.verticalControlMode = .velocity
+            aircraft.flightController?.yawControlMode = .angularVelocity
+            aircraft.flightController?.isVirtualStickAdvancedModeEnabled = true
+        })
+    }
+    
 }

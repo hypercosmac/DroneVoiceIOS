@@ -2,14 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>DJI SDK requires bluetooth capability, the app itself does not use bluetooth</string>
 	<key>DJISDKAppKey</key>
-	<string>5441161517e2fb4cfeeb4be8</string>
+	<!-- <string>5441161517e2fb4cfeeb4be8</string> -->
+	<string>bfb6d0ec459f6400e2d65acd</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>DJISDKAppKey</key>
-		<string>REPLACE-WITH-YOUR-APP-KEY</string>
+		<string>bfb6d0ec459f6400e2d65acd</string>
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
@@ -20,5 +19,16 @@
 		<string>com.dji.common</string>
 		<string>com.dji.logiclink</string>
 	</array>
+	<key>CFBundleIdentifier</key>
+	<string>com.autonomousdroneingelligence.dji</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app uses the microphone to listen for voice commands to control the drone.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app uses speech recognition to detect voice commands for drone control.</string>
 </dict>
 </plist>

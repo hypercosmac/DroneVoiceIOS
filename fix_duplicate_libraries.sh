@@ -1,3 +1,14 @@
+#!/bin/bash
+
+# Script to fix duplicate DJIWidget library warning
+
+# The issue is likely in the Pods project configuration where the library is specified multiple times
+# This can be fixed by running a post-installation script in the Podfile
+
+echo "Updating Podfile to fix duplicate libraries warning..."
+
+# Update the Podfile to include a post_install hook
+cat > Podfile << 'EOL'
 platform :ios, '15.1'
 source 'https://github.com/CocoaPods/Specs.git'
 
@@ -21,3 +32,11 @@ post_install do |installer|
     end
   end
 end
+EOL
+
+echo "Podfile updated. Running pod install..."
+
+# Run pod install to apply changes
+pod install
+
+echo "Done! The duplicate libraries warning should be fixed." 
