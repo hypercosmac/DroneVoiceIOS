@@ -51,17 +51,6 @@ struct VoiceCommandButtonView: View {
             log.info("Double tap detected - testing confirmation dialog")
             voiceCommandController.testConfirmationDialog()
         }
-        .overlay(
-            // Recognized text display
-            Text(voiceCommandController.recognizedText)
-                .padding(8)
-                .background(Color.black.opacity(0.6))
-                .foregroundColor(.white)
-                .cornerRadius(8)
-                .opacity(voiceCommandController.isListening ? 1 : 0)
-                .frame(width: 200, alignment: .center)
-                .offset(y: -80)
-        )
         // Command confirmation alert
         .alert(isPresented: $voiceCommandController.showConfirmation) {
             Alert(
@@ -297,99 +286,115 @@ struct MainView: View {
     }
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                // FPV Background View
-                FPVView(djiConnector: djiConnector,
-                        videoPreviewController: videoPreviewController)
-                    .edgesIgnoringSafeArea(.all)
-                
-                // Status Overlay (Battery, Altitude, Distance)
-                VStack {
-                    HStack {
-                        StatusView(flightController: flightController)
-                            .padding(.top, 16)
-                            .padding(.leading, 16)
-                            .background(Color.black.opacity(0.3))
-                            .cornerRadius(8)
-                            .padding(8)
-                        Spacer()
-                    }
-                    Spacer()
-                }
-                
-                // Right Control Bar
+        ZStack {
+            // FPV Background View
+            FPVView(djiConnector: djiConnector,
+                    videoPreviewController: videoPreviewController)
+                .edgesIgnoringSafeArea(.all)
+            
+            // Status Overlay (Battery, Altitude, Distance)
+            VStack {
                 HStack {
-                    Spacer()
-                    ControlBarView(showSettings: $showSettings,
-                                   djiConnector: djiConnector,
-                                   flightController: flightController,
-                                   cameraController: cameraController)
-                        .frame(width: 60)
-                        .background(Color.white.opacity(0.8))
+                    StatusView(flightController: flightController)
+                        .padding(.top, 16)
+                        .padding(.leading, 16)
+                        .background(Color.black.opacity(0.3))
                         .cornerRadius(8)
-                        .padding(.trailing, 16)
-                }
-                
-                // Voice Command Button (positioned at bottom left)
-                VStack {
+                        .padding(8)
                     Spacer()
-                    HStack {
-                        VoiceCommandButtonView(voiceCommandController: voiceCommandController)
-                        Spacer()
-                    }
                 }
-                
-                // Virtual Joysticks Overlay (if needed)
-                if djiConnector.isDroneConnected {
-                    VStack {
-                        Spacer()
-                        HStack {
-                            // Left Virtual Joystick (Throttle/Yaw)
-                            VirtualJoystickView(
-                                onJoystickMoved: { (x, y) in
-                                    // Handle left joystick - throttle (y) and yaw (x)
-                                    flightController.sendVirtualStickCommands(
-                                        throttle: Float(-y * 2.0), // Negative Y for up movement
-                                        yaw: Float(x * 30.0),     // X for rotation
-                                        pitch: 0,
-                                        roll: 0
-                                    )
-                                }
-                            )
-                            .frame(width: 120, height: 120)
-                            .background(Color.black.opacity(0.3))
-                            .cornerRadius(60)
-                            .padding(.leading, 30)
-                            
-                            Spacer()
-                            
-                            // Right Virtual Joystick (Pitch/Roll)
-                            VirtualJoystickView(
-                                onJoystickMoved: { (x, y) in
-                                    // Handle right joystick - pitch (y) and roll (x)
-                                    flightController.sendVirtualStickCommands(
-                                        throttle: 0,
-                                        yaw: 0,
-                                        pitch: Float(-y * 15.0),  // Negative Y for forward motion
-                                        roll: Float(x * 15.0)     // X for lateral movement
-                                    )
-                                }
-                            )
-                            .frame(width: 120, height: 120)
-                            .background(Color.black.opacity(0.3))
-                            .cornerRadius(60)
-                            .padding(.trailing, 90)
-                        }
-                        .padding(.bottom, 30)
-                    }
+                Spacer()
+            }
+            
+            // Right Control Bar
+            HStack {
+                Spacer()
+                ControlBarView(showSettings: $showSettings,
+                               djiConnector: djiConnector,
+                               flightController: flightController,
+                               cameraController: cameraController)
+                    .frame(width: 60)
+                    .background(Color.white.opacity(0.8))
+                    .cornerRadius(8)
+                    .padding(.trailing, 16)
+            }
+            
+            // Voice Command Button (positioned at bottom left)
+            VStack {
+                Spacer()
+                HStack {
+                    VoiceCommandButtonView(voiceCommandController: voiceCommandController)
+                    Spacer()
                 }
             }
-            .onReceive(djiConnector.$isDroneConnected) { isConnected in
-                if isConnected {
-                    flightController.setupDelegates()
-                    cameraController.setupDelegates()
+            
+            // Full-width recognized text display
+            VStack {
+                if voiceCommandController.isListening {
+                    Text(voiceCommandController.recognizedText)
+                        .padding(12)
+                        .background(Color.black.opacity(0.7))
+                        .foregroundColor(.white)
+                        .font(.system(size: 18, weight: .medium))
+                        .cornerRadius(10)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 50)
+                        .transition(.opacity)
                 }
+                Spacer()
+            }
+            .animation(.easeInOut(duration: 0.2), value: voiceCommandController.isListening)
+            
+            // Virtual Joysticks Overlay (if needed)
+            if djiConnector.isDroneConnected {
+                VStack {
+                    Spacer()
+                    HStack {
+                        // Left Virtual Joystick (Throttle/Yaw)
+                        VirtualJoystickView(
+                            onJoystickMoved: { (x, y) in
+                                // Handle left joystick - throttle (y) and yaw (x)
+                                flightController.sendVirtualStickCommands(
+                                    throttle: Float(-y * 2.0), // Negative Y for up movement
+                                    yaw: Float(x * 30.0),     // X for rotation
+                                    pitch: 0,
+                                    roll: 0
+                                )
+                            }
+                        )
+                        .frame(width: 120, height: 120)
+                        .background(Color.black.opacity(0.3))
+                        .cornerRadius(60)
+                        .padding(.leading, 60)
+                        
+                        Spacer()
+                        
+                        // Right Virtual Joystick (Pitch/Roll)
+                        VirtualJoystickView(
+                            onJoystickMoved: { (x, y) in
+                                // Handle right joystick - pitch (y) and roll (x)
+                                flightController.sendVirtualStickCommands(
+                                    throttle: 0,
+                                    yaw: 0,
+                                    pitch: Float(-y * 15.0),  // Negative Y for forward motion
+                                    roll: Float(x * 15.0)     // X for lateral movement
+                                )
+                            }
+                        )
+                        .frame(width: 120, height: 120)
+                        .background(Color.black.opacity(0.3))
+                        .cornerRadius(60)
+                        .padding(.trailing, 60)
+                    }
+                    .padding(.bottom, 30)
+                }
+            }
+        }
+        .ignoresSafeArea()
+        .onReceive(djiConnector.$isDroneConnected) { isConnected in
+            if isConnected {
+                flightController.setupDelegates()
+                cameraController.setupDelegates()
             }
         }
     }
