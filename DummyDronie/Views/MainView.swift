@@ -46,23 +46,15 @@ struct VoiceCommandButtonView: View {
                     voiceCommandController.stopListening()
                 }
         )
-        // Add double tap gesture for testing
+        // Add double tap gesture for testing takeoff
         .onTapGesture(count: 2) {
-            log.info("Double tap detected - testing confirmation dialog")
-            voiceCommandController.testConfirmationDialog()
+            log.info("Double tap detected - executing takeoff")
+            voiceCommandController.takeOff()
         }
-        // Command confirmation alert
-        .alert(isPresented: $voiceCommandController.showConfirmation) {
-            Alert(
-                title: Text("Confirm Command"),
-                message: Text("Do you want to execute 'Take Off'?"),
-                primaryButton: .destructive(Text("Yes")) {
-                    voiceCommandController.executeCommand()
-                },
-                secondaryButton: .cancel() {
-                    voiceCommandController.cancelCommand()
-                }
-            )
+        // Add triple tap gesture for testing landing
+        .onTapGesture(count: 3) {
+            log.info("Triple tap detected - executing landing")
+            voiceCommandController.land()
         }
     }
 }
@@ -79,8 +71,6 @@ class VoiceCommandController: NSObject, ObservableObject {
     // Published properties for UI updates
     @Published var isListening = false
     @Published var recognizedText = ""
-    @Published var showConfirmation = false
-    @Published var commandToConfirm = ""
     
     // Reference to FlightController
     private var flightController: FlightController
@@ -149,18 +139,31 @@ class VoiceCommandController: NSObject, ObservableObject {
                 log.info("Recognized text: \(self.recognizedText)")
                 isFinal = result.isFinal
                 
-                // Check for "take off" command - make detection more flexible with trimming and case insensitivity
+                // Check for recognized commands - directly execute without confirmation
                 let normalizedText = result.bestTranscription.formattedString.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                // Check for "take off" command
                 if normalizedText.contains("take off") || 
                    normalizedText.contains("takeoff") || 
                    normalizedText.contains("take-off") {
                     log.info("Take off command detected: '\(normalizedText)'")
-                    self.commandToConfirm = "takeoff"
                     
-                    // Ensure UI updates happen on main thread
+                    // Execute immediately without confirmation
                     DispatchQueue.main.async {
-                        self.showConfirmation = true
                         self.stopListening()
+                        self.takeOff()
+                    }
+                }
+                
+                // Check for "land" command
+                if normalizedText.contains("land") ||
+                   normalizedText.contains("landing") {
+                    log.info("Land command detected: '\(normalizedText)'")
+                    
+                    // Execute immediately without confirmation
+                    DispatchQueue.main.async {
+                        self.stopListening()
+                        self.land()
                     }
                 }
             }
@@ -216,24 +219,8 @@ class VoiceCommandController: NSObject, ObservableObject {
         log.info("Stopped listening for voice commands")
     }
     
-    // Execute confirmed command
-    func executeCommand() {
-        log.info("Command execution confirmed: \(commandToConfirm)")
-        switch commandToConfirm {
-        case "takeoff":
-            log.info("Executing take off command")
-            takeOff()
-        default:
-            log.error("Unknown command: \(commandToConfirm)")
-        }
-        
-        // Reset confirmation state
-        showConfirmation = false
-        commandToConfirm = ""
-    }
-    
-    // Take off function using DJI SDK
-    private func takeOff() {
+    // Take off function using DJI SDK - public so it can be called directly
+    func takeOff() {
         guard let aircraft = DJISDKManager.product() as? DJIAircraft else {
             log.error("Aircraft is not found")
             return
@@ -248,18 +235,20 @@ class VoiceCommandController: NSObject, ObservableObject {
         })
     }
     
-    // Cancel command with logging
-    func cancelCommand() {
-        log.info("Command cancelled: \(commandToConfirm)")
-        commandToConfirm = ""
-        showConfirmation = false
-    }
-    
-    // Add diagnostic method to manually test the confirmation dialog
-    func testConfirmationDialog() {
-        log.info("Testing confirmation dialog")
-        commandToConfirm = "takeoff"
-        showConfirmation = true
+    // Land function using DJI SDK - public so it can be called directly
+    func land() {
+        guard let aircraft = DJISDKManager.product() as? DJIAircraft else {
+            log.error("Aircraft is not found")
+            return
+        }
+        
+        aircraft.flightController?.startLanding(completion: { (error) in
+            if let error = error {
+                log.error("Landing failed: \(error.localizedDescription)")
+            } else {
+                log.info("Land command sent successfully")
+            }
+        })
     }
 }
 
@@ -365,7 +354,7 @@ struct MainView: View {
                         .frame(width: 120, height: 120)
                         .background(Color.black.opacity(0.3))
                         .cornerRadius(60)
-                        .padding(.leading, 60)
+                        .padding(.leading, 120)
                         
                         Spacer()
                         
@@ -384,7 +373,7 @@ struct MainView: View {
                         .frame(width: 120, height: 120)
                         .background(Color.black.opacity(0.3))
                         .cornerRadius(60)
-                        .padding(.trailing, 60)
+                        .padding(.trailing, 100)
                     }
                     .padding(.bottom, 30)
                 }
