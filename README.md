@@ -4,6 +4,8 @@
 
 This prototype builds upon the original DummyDronie repository, evolving it into a platform for Drones as Natural Language AI Agents.
 
+![Banner](https://user-images.githubusercontent.com/8620461/232165557-58ec5449-8365-4fd8-8fa3-70a79e2ec2a1.png)
+
 ## Vision
 
 ### Natural Language Tasking
@@ -11,6 +13,9 @@ Instead of programming flight paths or manually piloting, an operator can simply
 
 ### Human-Machine Collaboration
 Drones operate as part of a seamless human-machine team, enhancing safety and productivity in various environments. Rather than replacing humans, these AI drones collaborate with people and other machines to accomplish goals more efficiently.
+
+### Real-time Object Detection
+The drone uses computer vision to identify and track objects in its environment. Powered by YOLOv8, one of the most advanced object detection models, droneAI can recognize over 80 different types of objects in real-time, from vehicles and people to animals and everyday items.
 
 ## Features
 
@@ -20,6 +25,9 @@ Drones operate as part of a seamless human-machine team, enhancing safety and pr
 - Monitor drone's battery percentage, altitude, and distance
 - Start and stop video recording
 - Virtual joystick controls for manual flight
+- Real-time object detection using YOLOv8
+- Toggle object detection on/off during flight
+- Visual display of detected objects with confidence scores
 
 ## Requirements
 
@@ -42,6 +50,12 @@ Drones operate as part of a seamless human-machine team, enhancing safety and pr
 3. The app will automatically detect and connect to the drone.
 4. Once connected, you can control the drone using voice commands or virtual joysticks.
 5. Press and hold the microphone button to issue voice commands like "take off" or "land".
+6. Object detection is enabled by default. Tap the eye icon in the top-right corner to toggle it on/off.
+7. Detected objects will be highlighted with bounding boxes and labeled with their class names and confidence scores.
+
+## Documentation
+
+For details on the implementation of the YOLO object detection feature, see [IMPLEMENTATION_NOTES.md](IMPLEMENTATION_NOTES.md).
 
 ## Contributing
 

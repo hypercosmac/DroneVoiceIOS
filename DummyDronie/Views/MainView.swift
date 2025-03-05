@@ -276,22 +276,26 @@ struct MainView: View {
     
     var body: some View {
         ZStack {
-            // FPV Background View
-            FPVView(djiConnector: djiConnector,
-                    videoPreviewController: videoPreviewController)
+            // FPV View as background
+            FPVView(djiConnector: djiConnector, videoPreviewController: videoPreviewController)
                 .edgesIgnoringSafeArea(.all)
             
-            // Status Overlay (Battery, Altitude, Distance)
+            // Status Overlays
             VStack {
+                // Connection Status at top
+                ConnectionStatusView(djiConnector: djiConnector, videoPreviewController: videoPreviewController)
+                
+                // Flight Status (Battery, Altitude, etc.)
                 HStack {
                     StatusView(flightController: flightController)
-                        .padding(.top, 16)
+                        .padding(.top, 8)
                         .padding(.leading, 16)
                         .background(Color.black.opacity(0.3))
                         .cornerRadius(8)
                         .padding(8)
                     Spacer()
                 }
+                
                 Spacer()
             }
             
@@ -333,6 +337,10 @@ struct MainView: View {
                 Spacer()
             }
             .animation(.easeInOut(duration: 0.2), value: voiceCommandController.isListening)
+            
+            // Object Detection Overlay
+            DetectedObjectsView(videoPreviewController: videoPreviewController)
+                .padding(.top, voiceCommandController.isListening ? 100 : 16)
             
             // Virtual Joysticks Overlay (if needed)
             if djiConnector.isDroneConnected {
