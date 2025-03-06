@@ -142,6 +142,13 @@ class VoiceCommandController: NSObject, ObservableObject {
                 // Check for recognized commands - directly execute without confirmation
                 let normalizedText = result.bestTranscription.formattedString.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
                 
+                // Check if the command is prefixed with one of the required wake words
+                let hasWakeWord = normalizedText.contains("drone ai") || 
+                                  normalizedText.contains("droneai") || 
+                                  normalizedText.contains("drone eye")
+                
+                // Only process commands if a wake word is detected (except for legacy takeoff and land which work without wake word)
+                
                 // Check for "take off" command
                 if normalizedText.contains("take off") || 
                    normalizedText.contains("takeoff") || 
@@ -164,6 +171,69 @@ class VoiceCommandController: NSObject, ObservableObject {
                     DispatchQueue.main.async {
                         self.stopListening()
                         self.land()
+                    }
+                }
+                
+                // Process the following commands only if a wake word is present
+                if hasWakeWord {
+                    // Movement commands - left/right
+                    if normalizedText.contains("move left") || normalizedText.contains("go left") {
+                        log.info("Move left command detected: '\(normalizedText)'")
+                        DispatchQueue.main.async {
+                            self.moveLeft()
+                        }
+                    }
+                    else if normalizedText.contains("move right") || normalizedText.contains("go right") {
+                        log.info("Move right command detected: '\(normalizedText)'")
+                        DispatchQueue.main.async {
+                            self.moveRight()
+                        }
+                    }
+                    
+                    // Rotation commands
+                    else if normalizedText.contains("rotate left") || normalizedText.contains("turn left") {
+                        log.info("Rotate left command detected: '\(normalizedText)'")
+                        DispatchQueue.main.async {
+                            self.rotateLeft()
+                        }
+                    }
+                    else if normalizedText.contains("rotate right") || normalizedText.contains("turn right") {
+                        log.info("Rotate right command detected: '\(normalizedText)'")
+                        DispatchQueue.main.async {
+                            self.rotateRight()
+                        }
+                    }
+                    
+                    // Forward/backward commands
+                    else if normalizedText.contains("move forward") || 
+                            normalizedText.contains("go forward") || 
+                            normalizedText.contains("move front") {
+                        log.info("Move forward command detected: '\(normalizedText)'")
+                        DispatchQueue.main.async {
+                            self.moveForward()
+                        }
+                    }
+                    else if normalizedText.contains("move backward") || 
+                            normalizedText.contains("go backward") || 
+                            normalizedText.contains("move back") {
+                        log.info("Move backward command detected: '\(normalizedText)'")
+                        DispatchQueue.main.async {
+                            self.moveBackward()
+                        }
+                    }
+                    
+                    // Up/down commands
+                    else if normalizedText.contains("move up") || normalizedText.contains("go up") {
+                        log.info("Move up command detected: '\(normalizedText)'")
+                        DispatchQueue.main.async {
+                            self.moveUp()
+                        }
+                    }
+                    else if normalizedText.contains("move down") || normalizedText.contains("go down") {
+                        log.info("Move down command detected: '\(normalizedText)'")
+                        DispatchQueue.main.async {
+                            self.moveDown()
+                        }
                     }
                 }
             }
@@ -249,6 +319,152 @@ class VoiceCommandController: NSObject, ObservableObject {
                 log.info("Land command sent successfully")
             }
         })
+    }
+    
+    // Movement commands using virtual stick
+    
+    // Move left - applies small roll to the left
+    func moveLeft() {
+        log.info("Executing move left command")
+        flightController.sendVirtualStickCommands(
+            throttle: 0,
+            yaw: 0,
+            pitch: 0,
+            roll: -5.0  // Negative roll for left movement
+        )
+        
+        // Reset after brief movement
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.flightController.sendVirtualStickCommands(
+                throttle: 0, yaw: 0, pitch: 0, roll: 0
+            )
+        }
+    }
+    
+    // Move right - applies small roll to the right
+    func moveRight() {
+        log.info("Executing move right command")
+        flightController.sendVirtualStickCommands(
+            throttle: 0,
+            yaw: 0,
+            pitch: 0,
+            roll: 5.0  // Positive roll for right movement
+        )
+        
+        // Reset after brief movement
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.flightController.sendVirtualStickCommands(
+                throttle: 0, yaw: 0, pitch: 0, roll: 0
+            )
+        }
+    }
+    
+    // Rotate left - applies small yaw to the left
+    func rotateLeft() {
+        log.info("Executing rotate left command")
+        flightController.sendVirtualStickCommands(
+            throttle: 0,
+            yaw: -10.0,  // Negative yaw for left rotation
+            pitch: 0,
+            roll: 0
+        )
+        
+        // Reset after brief movement
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.flightController.sendVirtualStickCommands(
+                throttle: 0, yaw: 0, pitch: 0, roll: 0
+            )
+        }
+    }
+    
+    // Rotate right - applies small yaw to the right
+    func rotateRight() {
+        log.info("Executing rotate right command")
+        flightController.sendVirtualStickCommands(
+            throttle: 0,
+            yaw: 10.0,  // Positive yaw for right rotation
+            pitch: 0,
+            roll: 0
+        )
+        
+        // Reset after brief movement
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.flightController.sendVirtualStickCommands(
+                throttle: 0, yaw: 0, pitch: 0, roll: 0
+            )
+        }
+    }
+    
+    // Move forward - applies small forward pitch
+    func moveForward() {
+        log.info("Executing move forward command")
+        flightController.sendVirtualStickCommands(
+            throttle: 0,
+            yaw: 0,
+            pitch: -5.0,  // Negative pitch for forward motion
+            roll: 0
+        )
+        
+        // Reset after brief movement
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.flightController.sendVirtualStickCommands(
+                throttle: 0, yaw: 0, pitch: 0, roll: 0
+            )
+        }
+    }
+    
+    // Move backward - applies small backward pitch
+    func moveBackward() {
+        log.info("Executing move backward command")
+        flightController.sendVirtualStickCommands(
+            throttle: 0,
+            yaw: 0,
+            pitch: 5.0,  // Positive pitch for backward motion
+            roll: 0
+        )
+        
+        // Reset after brief movement
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.flightController.sendVirtualStickCommands(
+                throttle: 0, yaw: 0, pitch: 0, roll: 0
+            )
+        }
+    }
+    
+    // Move up - applies small upward throttle
+    func moveUp() {
+        log.info("Executing move up command")
+        flightController.sendVirtualStickCommands(
+            throttle: 2.0,  // Positive throttle for upward movement
+            yaw: 0,
+            pitch: 0,
+            roll: 0
+        )
+        
+        // Reset after brief movement
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.flightController.sendVirtualStickCommands(
+                throttle: 0, yaw: 0, pitch: 0, roll: 0
+            )
+        }
+    }
+    
+    // Move down - applies small downward throttle
+    func moveDown() {
+        log.info("Executing move down command")
+        flightController.sendVirtualStickCommands(
+            throttle: -2.0,  // Negative throttle for downward movement
+            yaw: 0,
+            pitch: 0,
+            roll: 0
+        )
+        
+        // Reset after brief movement
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.flightController.sendVirtualStickCommands(
+                throttle: 0, yaw: 0, pitch: 0, roll: 0
+            )
+        }
     }
 }
 
